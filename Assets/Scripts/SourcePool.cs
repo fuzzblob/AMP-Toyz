@@ -15,8 +15,9 @@ public class SourcePool
     public AudioSource Get(){
         if(data.Count > 0)
             return data.Pop();
-        else if(created < maxCount)
+        else if(maxCount == 0 || created < maxCount)
             return Create();
+        Debug.LogWarning("coudn't get AudioSource from pool!");
         return null;
     }
 
@@ -26,8 +27,8 @@ public class SourcePool
 
     private AudioSource Create(){
         created++;
-        var go = new GameObject("Source");
-        var s = go.AddComponent<AudioSource>();
+        GameObject go = new GameObject("Source " + created.ToString("00"));
+        AudioSource s = go.AddComponent<AudioSource>();
         s.spatialBlend = 0f;
         return s;
     }

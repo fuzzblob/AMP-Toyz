@@ -27,9 +27,10 @@ public class AudioPlayer : MonoBehaviour
     }
 
     public void Play(AudioAsset sound){
-        var s = Instance.pool.Get();
+        var s = pool.Get();
         if(s == null)
             return;
+        Debug.Log("got AudioSource");
         s.clip = sound.clip;
         s.Play();
         activeAudio.Add(s);
