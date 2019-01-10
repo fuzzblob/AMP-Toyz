@@ -6,10 +6,15 @@ public class SourcePool
     private Stack<AudioSource> data;
     private int maxCount;
     private int created;
+    private GameObject prefab;
 
-    public SourcePool(int max = 0){
+    public SourcePool(int max = 0, int min = 0){
         maxCount = max;
         data = new Stack<AudioSource>(maxCount);
+        CreatePrefab();
+        for(int i = 0; i < min; i++){
+            Put(Create());
+        }
     }
 
     public AudioSource Get(){
@@ -27,9 +32,15 @@ public class SourcePool
 
     private AudioSource Create(){
         created++;
-        GameObject go = new GameObject("Source " + created.ToString("00"));
-        AudioSource s = go.AddComponent<AudioSource>();
+        GameObject go = GameObject.Instantiate(prefab);
+        go.name = "Source " + created.ToString("00");
+        return go.GetComponent<AudioSource>();
+    }
+
+    private void CreatePrefab(){
+        prefab = new GameObject();
+        var s = prefab.AddComponent<AudioSource>();
+        
         s.spatialBlend = 0f;
-        return s;
     }
 }
