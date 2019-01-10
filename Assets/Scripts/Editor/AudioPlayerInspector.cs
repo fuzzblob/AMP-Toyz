@@ -13,7 +13,7 @@ public class AudioPlayerInspector : Editor
         GUI.enabled = Application.isPlaying;
 
         if(GUILayout.Button("Play")){
-            player.sound.Play();
+            player.Sound.Play();
         }
     }
 }
