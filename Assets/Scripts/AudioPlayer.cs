@@ -13,7 +13,7 @@ public class AudioPlayer : MonoBehaviour
     void Awake(){
         Instance = this;
 
-        pool  = new SourcePool();
+        pool = new SourcePool(0, 16);
         activeAudio = new List<AudioSource>();
     }
 

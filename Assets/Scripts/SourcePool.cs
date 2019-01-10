@@ -32,15 +32,16 @@ public class SourcePool
 
     private AudioSource Create(){
         created++;
-        GameObject go = GameObject.Instantiate(prefab);
+        GameObject go = GameObject.Instantiate(prefab, AudioPlayer.Instance.transform);
         go.name = "Source " + created.ToString("00");
         return go.GetComponent<AudioSource>();
     }
 
     private void CreatePrefab(){
         prefab = new GameObject();
-        var s = prefab.AddComponent<AudioSource>();
+        prefab.transform.parent = AudioPlayer.Instance.transform;
         
+        var s = prefab.AddComponent<AudioSource>();
         s.spatialBlend = 0f;
     }
 }
