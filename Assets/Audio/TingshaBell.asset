@@ -12,4 +12,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2c4472671ad1d5640908d07ddbdd1239, type: 3}
   m_Name: TingshaBell
   m_EditorClassIdentifier: 
-  clip: {fileID: 8300000, guid: 0ed6cfb239e428c4fafbb76199093f43, type: 3}
+  Clips:
+  - {fileID: 8300000, guid: 0ed6cfb239e428c4fafbb76199093f43, type: 3}
+  - {fileID: 8300000, guid: 0ed6cfb239e428c4fafbb76199093f43, type: 3}
+  - {fileID: 8300000, guid: 0ed6cfb239e428c4fafbb76199093f43, type: 3}
+  - {fileID: 8300000, guid: 0ed6cfb239e428c4fafbb76199093f43, type: 3}
+  - {fileID: 8300000, guid: 0ed6cfb239e428c4fafbb76199093f43, type: 3}
+  - {fileID: 8300000, guid: 0ed6cfb239e428c4fafbb76199093f43, type: 3}
+  - {fileID: 8300000, guid: 0ed6cfb239e428c4fafbb76199093f43, type: 3}
+  - {fileID: 8300000, guid: 0ed6cfb239e428c4fafbb76199093f43, type: 3}
+  - {fileID: 8300000, guid: 0ed6cfb239e428c4fafbb76199093f43, type: 3}
+  - {fileID: 8300000, guid: 0ed6cfb239e428c4fafbb76199093f43, type: 3}
+  PlayMode: 2
+  PitchBase: 0
+  PitchOffset: 0
+  VolumeBase: 0
+  VolumeOffset: 0

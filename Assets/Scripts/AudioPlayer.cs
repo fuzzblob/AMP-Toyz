@@ -32,7 +32,7 @@ public class AudioPlayer : MonoBehaviour
         if(s == null)
             return;
         // set source properties
-        s.clip = sound.Clip;
+        s.clip = GetNextClip(sound);
         // apply pitch and volume randomization
         float pitchSemitones = sound.PitchBase + Random.Range(-sound.PitchOffset / 2f, sound.PitchOffset / 2f);
         float volumeDecibels = sound.VolumeBase + Random.Range(-sound.VolumeOffset / 2f, sound.VolumeOffset / 2f);
@@ -41,5 +41,54 @@ public class AudioPlayer : MonoBehaviour
         // playe the AudioSource
         s.Play();
         activeAudio.Add(s);
+    }
+
+    private AudioClip GetNextClip(AudioAsset sound){
+        int index = sound.LastIndex;
+        int length = sound.Clips.Length;
+
+        Debug.LogWarning(Random.Range(0, 0));
+
+        switch(sound.PlayMode){
+        case PlaylistMode.Sequence:
+            if(++index >= length)
+                index = 0;
+            break;
+        case PlaylistMode.Random:
+            do{
+                index = Random.Range(0, length);
+            }
+            // prevent repeating index unless only two options
+            while(index == sound.LastIndex && length > 2);
+            break;
+        case PlaylistMode.Shuffle:
+            index = GetNextShuffled(sound, index, length);
+            break;
+        default:
+            Debug.LogError(sound.PlayMode + " is not implemented yet!");
+            return null;
+        }
+        sound.LastIndex = index;
+        Debug.Log(index);
+        return sound.Clips[index];
+    }
+
+    private int GetNextShuffled(AudioAsset sound, int index, int length){
+        if(sound.ShuffleQueue == null)
+                sound.ShuffleQueue = new Queue<int>(length);
+            if(sound.ShuffleQueue.Count ==0){
+                // TODO: infinyte loop if playlist empty?
+                while(index == sound.LastIndex)
+                    index = Random.Range(0, length);
+                sound.ShuffleQueue.Enqueue(index);
+                // reshuffle
+                while(sound.ShuffleQueue.Count < length){
+                    int num = Random.Range(0, length);
+                    if(sound.ShuffleQueue.Contains(num) == false)
+                        sound.ShuffleQueue.Enqueue(num);
+                }
+            }
+        
+        return index;
     }
 }
