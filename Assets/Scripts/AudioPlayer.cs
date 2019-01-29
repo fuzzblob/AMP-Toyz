@@ -64,6 +64,9 @@ public class AudioPlayer : MonoBehaviour
         case PlaylistMode.Shuffle:
             index = GetNextShuffled(sound, index, length);
             break;
+        case PlaylistMode.WeightedRandom:
+            index = GetNextWeightedRandom(sound);
+            break;
         default:
             Debug.LogError(sound.PlayMode + " is not implemented yet!");
             return null;
@@ -88,6 +91,32 @@ public class AudioPlayer : MonoBehaviour
                         sound.ShuffleQueue.Enqueue(num);
                 }
             }
+        
+        return index;
+    }
+
+    private int GetNextWeightedRandom(AudioAsset sound){
+        //TODO: UX issue here that is maybe unintuitive: total values don't always add to 100%,
+        //they can be more or less!
+        //We account for that here by getting a random number using the sum of all weights,
+        //then using each weight value as a threshold for "landing on" the associated clip
+
+        float sum = 0f;
+        for (int i = 0; i < sound.Weights.Count; i++){
+            sum += sound.Weights[i];
+        }
+
+        float random = Random.Range(0f, sum);
+        float nextThreshold = 0f;
+
+        int index = 0;
+        for (int i = 0; i < sound.Weights.Count; i++) {
+            nextThreshold += sound.Weights[i];
+            if (random < nextThreshold) {
+                index = i;
+                break;
+            }
+        }
         
         return index;
     }

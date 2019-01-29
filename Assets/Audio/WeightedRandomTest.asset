@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2c4472671ad1d5640908d07ddbdd1239, type: 3}
+  m_Name: WeightedRandomTest
+  m_EditorClassIdentifier: 
+  Clips:
+  - {fileID: 8300000, guid: 847e56e1b323ab34da9f0b8746595624, type: 3}
+  - {fileID: 8300000, guid: 2e83ee2db3ca42d4986c047ddd43d8d4, type: 3}
+  - {fileID: 8300000, guid: 09f468d5aa06dab4c8aed87c0104304a, type: 3}
+  - {fileID: 8300000, guid: 07d5855096bb8cf47a6b74b9e5f449bb, type: 3}
+  - {fileID: 8300000, guid: 07d5855096bb8cf47a6b74b9e5f449bb, type: 3}
+  PlayMode: 3
+  Weights:
+  - 0
+  - 69
+  - 29
+  - 27
+  - 61
+  PitchBase: 0
+  PitchOffset: 0
+  VolumeBase: 0
+  VolumeOffset: 0

@@ -1,11 +1,11 @@
 ﻿using UnityEngine;
+using System.Collections.Generic;
 
 public enum PlaylistMode{
     Sequence = 0,
     Random = 1,
     Shuffle = 2,
-    // TODO: implement
-    // Weighted = 3,
+    WeightedRandom = 3
 }
 
 [CreateAssetMenu(fileName = "AudioAsset", menuName = "Audio/Create Asset")]
@@ -19,7 +19,10 @@ public class AudioAsset : ScriptableObject
     [System.NonSerialized]
     public int LastIndex;
     [System.NonSerialized]
-    public System.Collections.Generic.Queue<int> ShuffleQueue;
+    public Queue<int> ShuffleQueue;
+    [Tooltip("Chance to play associated with each AudioClip")]
+    [Range(0f, 100f)]
+    public List<float> Weights;
 
     // Audio
     [Range(-24, 24)]
