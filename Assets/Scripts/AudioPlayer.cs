@@ -10,7 +10,8 @@ public class AudioPlayer : MonoBehaviour
 
     void Awake(){
         Instance = this;
-        DontDestroyOnLoad(this);
+        if(Application.isPlaying)
+            DontDestroyOnLoad(this);
         // setup runtime data structures
         pool = new SourcePool(0, 16);
         activeAudio = new List<AudioSource>();
@@ -21,6 +22,7 @@ public class AudioPlayer : MonoBehaviour
     public void Quit(){
         foreach(AudioSource s in activeAudio)
             pool.Put(s);
+        activeAudio.Clear();
         pool.Quit();
     }
 
