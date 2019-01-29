@@ -8,9 +8,6 @@ public class AudioPlayer : MonoBehaviour
     private SourcePool pool;
     private List<AudioSource> activeAudio;
 
-    [Header("Debug")]
-    public AudioAsset Sound;
-
     void Awake(){
         Instance = this;
         DontDestroyOnLoad(this);

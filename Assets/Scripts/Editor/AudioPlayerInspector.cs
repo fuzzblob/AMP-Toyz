@@ -9,11 +9,5 @@ public class AudioPlayerInspector : Editor
     public override void OnInspectorGUI(){
         player = target as AudioPlayer;
         base.OnInspectorGUI();
-
-        GUI.enabled = Application.isPlaying;
-
-        if(GUILayout.Button("Play")){
-            player.Sound.Play();
-        }
     }
 }
