@@ -17,6 +17,20 @@ public class SourcePool
         }
     }
 
+    public void Quit(){
+#if UNITY_EDITOR
+        GameObject.DestroyImmediate(prefab);
+        while(data.Count > 0){
+            GameObject.DestroyImmediate(data.Pop().gameObject);
+        }
+#else
+        GameObject.Destroy(prefab);
+        while(data.Count > 0){
+            GameObject.Destroy(data.Pop().gameObject);
+        }
+#endif
+    }
+
     public AudioSource Get(){
         if(data.Count > 0)
             return data.Pop();

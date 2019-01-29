@@ -13,9 +13,18 @@ public class AudioPlayer : MonoBehaviour
 
     void Awake(){
         Instance = this;
+        DontDestroyOnLoad(this);
         // setup runtime data structures
         pool = new SourcePool(0, 16);
         activeAudio = new List<AudioSource>();
+    }
+
+    private void OnApplicationQuit() {}
+
+    public void Quit(){
+        foreach(AudioSource s in activeAudio)
+            pool.Put(s);
+        pool.Quit();
     }
 
     void LateUpdate(){
