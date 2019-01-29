@@ -52,6 +52,10 @@ public class AudioAssetInspector : Editor
         EditorGUILayout.PropertyField(VolumeOffset);
 
         serializedObject.ApplyModifiedProperties();
+
+        if(GUILayout.Button("Play")){
+            asset.Play();
+        }
     }
 
     private void MatchWeightsWithClips(){

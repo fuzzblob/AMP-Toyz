@@ -4,7 +4,7 @@ something something coding and audio tool in with [Nathan Glynn](https://github.
 
 ## TODO
 
-- weighted sample playback
+- editor mode audiotioning
 - fading in & out
 - virtual voices
 - stem layer system (music/ambiance)
