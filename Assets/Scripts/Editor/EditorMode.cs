@@ -36,7 +36,11 @@ public class EditorMode
         _gameObject = null;
     }
 
-    private static void Update(){ }
+    private static void Update(){
+        if(EditorApplication.isCompiling) {
+            Quit();
+        }
+    }
 
     private static void OnStateChange(PlayModeStateChange nextState) {
         Debug.Log(nextState.ToString());
