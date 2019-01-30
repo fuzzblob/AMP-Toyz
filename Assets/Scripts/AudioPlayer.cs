@@ -6,7 +6,7 @@ public class AudioPlayer : MonoBehaviour
 {
     public static AudioPlayer Instance { get; private set; }
     private SourcePool pool;
-    private List<AudioSource> activeAudio;
+    private List<Voice> activeAudio;
 
     void Awake(){
         Instance = this;
@@ -14,25 +14,27 @@ public class AudioPlayer : MonoBehaviour
             DontDestroyOnLoad(this);
         // setup runtime data structures
         pool = new SourcePool(0, 16);
-        activeAudio = new List<AudioSource>();
+        activeAudio = new List<Voice>();
     }
 
     private void OnApplicationQuit() {}
 
     public void Quit(){
-        foreach(AudioSource s in activeAudio)
-            pool.Put(s);
+        foreach(Voice voice in activeAudio)
+            pool.Put(voice.Source);
         activeAudio.Clear();
         pool.Quit();
     }
 
     void LateUpdate(){
-        // clean up list of playing audio
+        // update state of all Voices
         for(int i = activeAudio.Count - 1; i >= 0; i--){
-            if(activeAudio[i].isPlaying)
-                continue;
-            pool.Put(activeAudio[i]);
-            activeAudio.RemoveAt(i);
+            // clean up list of playing audio
+            if(activeAudio[i].Source.isPlaying == false) {
+                pool.Put(activeAudio[i].Source);
+                activeAudio.RemoveAt(i);
+            }
+            // TODO: deal with fading
         }
     }
 
@@ -47,9 +49,10 @@ public class AudioPlayer : MonoBehaviour
         float volumeDecibels = sound.VolumeBase + Random.Range(-sound.VolumeOffset / 2f, sound.VolumeOffset / 2f);
         s.pitch = AudioUtil.SemitoneToPitchFactor(pitchSemitones);
         s.volume = AudioUtil.DecibelToVolumeFactor(volumeDecibels);
-        // playe the AudioSource
+        // played the AudioSource
         s.Play();
-        activeAudio.Add(s);
+
+        activeAudio.Add(new Voice() { Source = s });
     }
 
     private AudioClip GetNextClip(AudioAsset sound){

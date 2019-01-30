@@ -1,6 +1,9 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 
+/// <summary>
+/// This enum describes how a collection of sounds should be played back
+/// </summary>
 public enum PlaylistMode{
     Sequence = 0,
     Random = 1,
