@@ -17,6 +17,10 @@ public class AudioAssetInspector : Editor
     SerializedProperty VolumeBase;
     SerializedProperty VolumeOffset;
 
+    SerializedProperty FadeType;
+    SerializedProperty FadeInPointMs;
+    SerializedProperty FadeOutPointMs;
+
     void OnEnable(){
         asset = target as AudioAsset;
 
@@ -28,7 +32,10 @@ public class AudioAssetInspector : Editor
         PitchOffset = serializedObject.FindProperty("PitchOffset");
         VolumeBase = serializedObject.FindProperty("VolumeBase");
         VolumeOffset = serializedObject.FindProperty("VolumeOffset");
-
+        
+        FadeType = serializedObject.FindProperty("FadeType");
+        FadeInPointMs = serializedObject.FindProperty("FadeInPointMs");
+        FadeOutPointMs = serializedObject.FindProperty("FadeOutPointMs");
     }
 
     public override void OnInspectorGUI(){
@@ -50,6 +57,10 @@ public class AudioAssetInspector : Editor
         EditorGUILayout.PropertyField(PitchOffset);
         EditorGUILayout.PropertyField(VolumeBase);
         EditorGUILayout.PropertyField(VolumeOffset);
+
+        EditorGUILayout.PropertyField(FadeType);
+        EditorGUILayout.PropertyField(FadeInPointMs);
+        EditorGUILayout.PropertyField(FadeOutPointMs);
 
         serializedObject.ApplyModifiedProperties();
 

@@ -24,7 +24,11 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 0ed6cfb239e428c4fafbb76199093f43, type: 3}
   - {fileID: 8300000, guid: 0ed6cfb239e428c4fafbb76199093f43, type: 3}
   PlayMode: 2
+  Weights: []
   PitchBase: 0
   PitchOffset: 0
   VolumeBase: 0
   VolumeOffset: 0
+  FadeType: 5
+  FadeInPointMs: 0
+  FadeOutPointMs: 1

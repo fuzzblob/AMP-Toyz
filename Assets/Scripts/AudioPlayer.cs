@@ -33,8 +33,19 @@ public class AudioPlayer : MonoBehaviour
             if(activeAudio[i].Source.isPlaying == false) {
                 pool.Put(activeAudio[i].Source);
                 activeAudio.RemoveAt(i);
+                continue;
             }
-            // TODO: deal with fading
+
+            // TODO: deal with fading, account for differences between fade ins and fade outs
+            // Sample implementation
+            float time = activeAudio[i].Source.time;
+            float t = Mathf.Max(time, activeAudio[i].Asset.FadeInPointMs) / activeAudio[i].Asset.FadeOutPointMs;
+            float fadeFactor = FadeBehaviour.GetFadeFactor(activeAudio[i].Asset.FadeType, t);
+            //Debug.Log($"t = {t}, fade factor = {fadeFactor}");
+
+            //TODO: the fadeFactor currently overrides any randomized volume, need to mix that
+            //value with the fadeFactor here
+            activeAudio[i].Source.volume = fadeFactor;
         }
     }
 
@@ -52,7 +63,7 @@ public class AudioPlayer : MonoBehaviour
         // played the AudioSource
         s.Play();
 
-        activeAudio.Add(new Voice() { Source = s });
+        activeAudio.Add(new Voice() { Source = s, Asset = sound });
     }
 
     private AudioClip GetNextClip(AudioAsset sound){
