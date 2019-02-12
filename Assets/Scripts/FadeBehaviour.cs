@@ -8,24 +8,26 @@ using SimpleEasing;
 /// </summary>
 public static class FadeBehaviour
 {
-    public static float GetFadeFactor(FadeType fadeType, float from, float to, float t) {
+    public static float GetFadeFactor(FadeType fadeType, float t) {
         switch(fadeType) {
-            case FadeType.Linear:
-                return EasingFunctions.Linear(from, to, t);
+            case FadeType.LinearIn:
+                return EasingFunctions.Linear(0f, 1f, t);
+            case FadeType.LinearOut:
+                return EasingFunctions.Linear(1f, 0f, t);
             case FadeType.ExpoIn:
-                return EasingFunctions.ExponentialIn(from, to, t);
+                return EasingFunctions.ExponentialIn(0f, 1f, t);
             case FadeType.ExpoOut:
-                return EasingFunctions.ExponentialOut(from, to, t);
+                return EasingFunctions.ExponentialOut(1f, 0f, t);
             case FadeType.QuadraticIn:
-                return EasingFunctions.QuadraticIn(from, to, t);
+                return EasingFunctions.QuadraticIn(0f, 1f, t);
             case FadeType.QuadraticOut:
-                return EasingFunctions.QuadraticOut(from, to, t);
+                return EasingFunctions.QuadraticOut(1f, 0f, t);
 
-            //If fade type is none or undefined, return the current value
+            //If fade type is none or undefined, return fade factor of 1f
             case FadeType.NONE:
-                return from;
+                return 1f;
             default:
-                return from;
+                return 1f;
         }
     }
 }
