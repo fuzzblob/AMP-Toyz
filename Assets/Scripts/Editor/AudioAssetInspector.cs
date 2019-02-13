@@ -6,6 +6,8 @@ using UnityEditor;
 [CustomEditor(typeof(AudioAsset))]
 public class AudioAssetInspector : Editor
 {
+    private static Voice _inspectorVoice;
+
     AudioAsset asset;
 
     SerializedProperty Clips;
@@ -17,9 +19,10 @@ public class AudioAssetInspector : Editor
     SerializedProperty VolumeBase;
     SerializedProperty VolumeOffset;
 
-    SerializedProperty FadeType;
-    SerializedProperty FadeInPointMs;
-    SerializedProperty FadeOutPointMs;
+    SerializedProperty FadeTypeIn;
+    SerializedProperty FadeTypeOut;
+    SerializedProperty FadeTimeIn;
+    SerializedProperty FadeTimeOut;
 
     void OnEnable(){
         asset = target as AudioAsset;
@@ -33,9 +36,10 @@ public class AudioAssetInspector : Editor
         VolumeBase = serializedObject.FindProperty("VolumeBase");
         VolumeOffset = serializedObject.FindProperty("VolumeOffset");
         
-        FadeType = serializedObject.FindProperty("FadeType");
-        FadeInPointMs = serializedObject.FindProperty("FadeInPointMs");
-        FadeOutPointMs = serializedObject.FindProperty("FadeOutPointMs");
+        FadeTypeIn = serializedObject.FindProperty("FadeTypeIn");
+        FadeTypeOut = serializedObject.FindProperty("FadeTypeOut");
+        FadeTimeIn = serializedObject.FindProperty("FadeTimeIn");
+        FadeTimeOut = serializedObject.FindProperty("FadeTimeOut");
     }
 
     public override void OnInspectorGUI(){
@@ -58,15 +62,22 @@ public class AudioAssetInspector : Editor
         EditorGUILayout.PropertyField(VolumeBase);
         EditorGUILayout.PropertyField(VolumeOffset);
 
-        EditorGUILayout.PropertyField(FadeType);
-        EditorGUILayout.PropertyField(FadeInPointMs);
-        EditorGUILayout.PropertyField(FadeOutPointMs);
-
+        EditorGUILayout.PropertyField(FadeTimeIn);
+        EditorGUILayout.PropertyField(FadeTypeIn);        
+        EditorGUILayout.PropertyField(FadeTimeOut);
+        EditorGUILayout.PropertyField(FadeTypeOut);
+        
         serializedObject.ApplyModifiedProperties();
 
         if(GUILayout.Button("Play")){
-            asset.Play();
+            _inspectorVoice = asset.Play();
         }
+        if(_inspectorVoice == null)
+            GUI.enabled = false;
+        if(GUILayout.Button("Stop")){
+            AudioPlayer.Instance.Stop(_inspectorVoice);
+        }
+        GUI.enabled = true;
     }
 
     private void MatchWeightsWithClips(){

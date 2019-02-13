@@ -29,6 +29,7 @@ MonoBehaviour:
   PitchOffset: 0
   VolumeBase: 0
   VolumeOffset: 0
-  FadeType: 5
-  FadeInPointMs: 0
-  FadeOutPointMs: 1
+  FadeTimeIn: 0.5
+  FadeTypeIn: 4
+  FadeTimeOut: 0.5
+  FadeTypeOut: 5

@@ -5,10 +5,15 @@ using UnityEngine;
 public enum FadeType
 {
     NONE = 0,
-    LinearIn,
-    LinearOut,
+    Linear,
     QuadraticIn,
     QuadraticOut,
     ExpoIn,
     ExpoOut
+}
+
+public enum FadeState {
+    NONE = 0,
+    In = 1,
+    Out = 2
 }

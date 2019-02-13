@@ -38,12 +38,13 @@ public class AudioAsset : ScriptableObject
     public float VolumeOffset;
 
     // Fade data
-    public FadeType FadeType;
-    public float FadeInPointMs;
-    public float FadeOutPointMs;
+    public float FadeTimeIn;
+    public FadeType FadeTypeIn;
+    public float FadeTimeOut;
+    public FadeType FadeTypeOut;
 
-    public void Play(){
-        AudioPlayer.Instance.Play(this);
+    public Voice Play(){
+        return AudioPlayer.Instance.Play(this);
     }
 
     private void OnEnable() {

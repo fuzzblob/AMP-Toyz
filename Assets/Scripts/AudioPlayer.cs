@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
+using SimpleEasing;
 
 [ExecuteInEditMode]
 public class AudioPlayer : MonoBehaviour
@@ -27,50 +28,93 @@ public class AudioPlayer : MonoBehaviour
     }
 
     void LateUpdate(){
+        float deltaTime = Time.deltaTime; // TODO: maybe use Time.unscaledDeltaTime?
         // update state of all Voices
         for(int i = activeAudio.Count - 1; i >= 0; i--){
+            Voice voice = activeAudio[i];
             // clean up list of playing audio
-            if(activeAudio[i].Source.isPlaying == false) {
-                pool.Put(activeAudio[i].Source);
+            if(voice.Source.isPlaying == false) {
+                pool.Put(voice.Source);
                 activeAudio.RemoveAt(i);
                 continue;
             }
-
-            // TODO: deal with fading, account for differences between fade ins and fade outs
-            // Sample implementation
-            float time = activeAudio[i].Source.time;
-            float t = Mathf.Max(time, activeAudio[i].Asset.FadeInPointMs) / activeAudio[i].Asset.FadeOutPointMs;
-            float fadeFactor = FadeBehaviour.GetFadeFactor(activeAudio[i].Asset.FadeType, t);
-            //Debug.Log($"t = {t}, fade factor = {fadeFactor}");
-
-            //TODO: the fadeFactor currently overrides any randomized volume, need to mix that
+            // TODO: fade out at end of file?
+            /* if(voice.Source.loop == false
+                && voice.Fader.FadeType == FadeType.NONE
+                && voice.Asset.FadeTypeOut != FadeType.NONE
+                && voice.Source.time + voice.Asset.FadeTimeOut >= voice.Source.clip.length)
+            {
+                voice.Fader.Fade(
+                    voice.Fader.FadeVolume, 0f,
+                    voice.Asset.FadeTimeOut, voice.Asset.FadeTypeOut);
+            }*/
+            // claculate fade volume factor
+            if(voice.Fader.FadeType != FadeType.NONE) {
+                voice.Fader.UpdateFade(deltaTime);
+            }
             //value with the fadeFactor here
-            activeAudio[i].Source.volume = fadeFactor;
+            if(voice.Source != null)
+                voice.Source.volume = voice.Volume * voice.Fader.Volume;
         }
     }
 
-    public void Play(AudioAsset sound){
+    public Voice Play(AudioAsset sound) {
         var s = pool.Get();
         if(s == null)
-            return;
+            return null;
+        var voice = new Voice() {
+            Source = s,
+            Asset = sound
+        };
+        voice.Fader.Reset();
         // set source properties
         s.clip = GetNextClip(sound);
+        // fading in
+        if(sound.FadeTypeIn != FadeType.NONE){
+            voice.Fader.Fade(0f, 1f, sound.FadeTimeIn, sound.FadeTypeIn);
+        }
         // apply pitch and volume randomization
         float pitchSemitones = sound.PitchBase + Random.Range(-sound.PitchOffset / 2f, sound.PitchOffset / 2f);
         float volumeDecibels = sound.VolumeBase + Random.Range(-sound.VolumeOffset / 2f, sound.VolumeOffset / 2f);
         s.pitch = AudioUtil.SemitoneToPitchFactor(pitchSemitones);
-        s.volume = AudioUtil.DecibelToVolumeFactor(volumeDecibels);
+        voice.Volume = AudioUtil.DecibelToVolumeFactor(volumeDecibels);
+        s.volume = voice.Volume * voice.Fader.Volume;
         // played the AudioSource
         s.Play();
 
-        activeAudio.Add(new Voice() { Source = s, Asset = sound });
+        activeAudio.Add(voice);
+        return voice;
+    }
+
+    public void Stop(Voice voice, float fadeOutTime = -1f){
+        if(voice.Asset.FadeTypeOut == FadeType.NONE){
+            StopVoice(voice);
+            return;
+        }
+        // calculate fade time
+        if(fadeOutTime >= 0f)
+            fadeOutTime = Mathf.Min(fadeOutTime, voice.Asset.FadeTimeOut);
+        else
+            fadeOutTime = voice.Asset.FadeTimeOut;
+        // start fading
+        voice.Fader.Fade(
+            voice.Fader.Volume, 0f,
+            fadeOutTime, voice.Asset.FadeTypeIn,
+            // make the fader stop the voice when done
+            delegate { StopVoice(voice); });
+    }
+
+    private void StopVoice(Voice voice)
+    {
+        voice.Source.Stop();
+        pool.Put(voice.Source);
+        voice.Source = null;
+        activeAudio.Remove(voice);
     }
 
     private AudioClip GetNextClip(AudioAsset sound){
         int index = sound.LastIndex;
         int length = sound.Clips.Length;
-
-        Debug.LogWarning(Random.Range(0, 0));
 
         switch(sound.PlayMode){
         case PlaylistMode.Sequence:
@@ -95,25 +139,24 @@ public class AudioPlayer : MonoBehaviour
             return null;
         }
         sound.LastIndex = index;
-        Debug.Log(index);
         return sound.Clips[index];
     }
 
     private int GetNextShuffled(AudioAsset sound, int index, int length){
         if(sound.ShuffleQueue == null)
-                sound.ShuffleQueue = new Queue<int>(length);
-            if(sound.ShuffleQueue.Count ==0){
-                // TODO: infinyte loop if playlist empty?
-                while(index == sound.LastIndex)
-                    index = Random.Range(0, length);
-                sound.ShuffleQueue.Enqueue(index);
-                // reshuffle
-                while(sound.ShuffleQueue.Count < length){
-                    int num = Random.Range(0, length);
-                    if(sound.ShuffleQueue.Contains(num) == false)
-                        sound.ShuffleQueue.Enqueue(num);
-                }
+            sound.ShuffleQueue = new Queue<int>(length);
+        if(sound.ShuffleQueue.Count ==0){
+            // TODO: infinyte loop if playlist empty?
+            while(index == sound.LastIndex)
+                index = Random.Range(0, length);
+            sound.ShuffleQueue.Enqueue(index);
+            // reshuffle
+            while(sound.ShuffleQueue.Count < length){
+                int num = Random.Range(0, length);
+                if(sound.ShuffleQueue.Contains(num) == false)
+                    sound.ShuffleQueue.Enqueue(num);
             }
+        }
         
         return index;
     }
