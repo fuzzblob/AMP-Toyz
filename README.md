@@ -1,15 +1,17 @@
 # AMP-Toyz
 
-something something coding and audio tool in with [Nathan Glynn](https://github.com/Kionius)
+[Maris Tammik](https://github.com/fuzzblob) and [Nathan Glynn](https://github.com/Kionius) coding and audio tool in the Unity Engine. It is named the [Audio Mentoring Project](http://audiomentoring.com/) which braught the two together.
+
+## Features
+
+- Pooled AudioSources
+- Sequence, Random, Shuffle & Weighted playback modes
+- Fading in & out with a selection of fade curves
 
 ## TODO
 
+- distance attenuation
 - random seek offset
-- fading in & out
-    - fade state
-        - curve
-        - target volume
-        - time
 - virtual voices
     - priority system to assign AudioSources
 - stem layer system (music/ambiance)
