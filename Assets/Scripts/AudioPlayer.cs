@@ -32,6 +32,14 @@ public class AudioPlayer : MonoBehaviour
         // update state of all Voices
         for(int i = activeAudio.Count - 1; i >= 0; i--){
             Voice voice = activeAudio[i];
+            if(voice == null){
+                activeAudio.RemoveAt(i);
+                continue;
+            }
+            if(voice.Source == null){
+                Debug.LogError("Voice doesn't have an AudioSource!");
+                continue;
+            }
             // clean up list of playing audio
             if(voice.Source.isPlaying == false) {
                 pool.Put(voice.Source);
@@ -59,16 +67,12 @@ public class AudioPlayer : MonoBehaviour
     }
 
     public Voice Play(AudioAsset sound) {
-        var s = pool.Get();
-        if(s == null)
-            return null;
-        var voice = new Voice() {
-            Source = s,
+        Voice voice = new Voice() {
             Asset = sound
         };
         voice.Fader.Reset();
-        // set source properties
-        s.clip = GetNextClip(sound);
+        // get AudioClip
+        voice.Clip = GetNextClip(sound);
         // fading in
         if(sound.FadeTypeIn != FadeType.NONE){
             voice.Fader.Fade(0f, 1f, sound.FadeTimeIn, sound.FadeTypeIn);
@@ -76,18 +80,31 @@ public class AudioPlayer : MonoBehaviour
         // apply pitch and volume randomization
         float pitchSemitones = sound.PitchBase + Random.Range(-sound.PitchOffset / 2f, sound.PitchOffset / 2f);
         float volumeDecibels = sound.VolumeBase + Random.Range(-sound.VolumeOffset / 2f, sound.VolumeOffset / 2f);
-        s.pitch = AudioUtil.SemitoneToPitchFactor(pitchSemitones);
+        voice.Pitch = AudioUtil.SemitoneToPitchFactor(pitchSemitones);
         voice.Volume = AudioUtil.DecibelToVolumeFactor(volumeDecibels);
-        s.volume = voice.Volume * voice.Fader.Volume;
         // set distance attentuation properties
-        s.spatialBlend = sound.Spatialized ? 1f : 0f;
-        s.minDistance = sound.MinimumDistance;
-        s.maxDistance = sound.MaximumDistance;
-        s.rolloffMode = sound.RolloffMode;
-        // played the AudioSource
-        s.Play();
+        voice.Spatialized = sound.Spatialized;
+        voice.MinDistance = sound.MinimumDistance;
+        voice.MaxDistance = sound.MaximumDistance;
 
         activeAudio.Add(voice);
+        // assign AudioSource
+        AudioSource s = pool.Get();
+        if(s == null){
+            // TODO: set voice virtual
+            Debug.LogError("can't assign AudioSource for sound asset " + sound);
+            return voice;
+        }
+        voice.Source = s;
+        s.clip = voice.Clip;
+        s.volume = voice.Volume * voice.Fader.Volume;
+        s.pitch = voice.Pitch;
+        s.spatialBlend = voice.Spatialized ? 1f : 0f;
+        s.minDistance = voice.MinDistance;
+        s.maxDistance = voice.MaxDistance;
+        s.rolloffMode = AudioRolloffMode.Linear;
+        // played the AudioSource
+        s.Play();
         return voice;
     }
 

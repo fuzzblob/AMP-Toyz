@@ -56,6 +56,9 @@ public class SourcePool
         prefab.transform.parent = AudioPlayer.Instance.transform;
         
         var s = prefab.AddComponent<AudioSource>();
+        s.playOnAwake = false;
+        s.reverbZoneMix = 0f;
+        s.dopplerLevel = 0f;
         s.spatialBlend = 0f;
     }
 }

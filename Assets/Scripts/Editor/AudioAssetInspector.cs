@@ -27,7 +27,6 @@ public class AudioAssetInspector : Editor
     SerializedProperty Spatialized;
     SerializedProperty MinimumDistance;
     SerializedProperty MaximumDistance;
-    SerializedProperty RolloffMode;
 
     void OnEnable(){
         asset = target as AudioAsset;
@@ -49,7 +48,6 @@ public class AudioAssetInspector : Editor
         Spatialized = serializedObject.FindProperty("Spatialized");
         MinimumDistance = serializedObject.FindProperty("MinimumDistance");
         MaximumDistance = serializedObject.FindProperty("MaximumDistance");
-        RolloffMode = serializedObject.FindProperty("RolloffMode");
     }
 
     public override void OnInspectorGUI(){
@@ -80,7 +78,6 @@ public class AudioAssetInspector : Editor
         EditorGUILayout.PropertyField(Spatialized);
         EditorGUILayout.PropertyField(MinimumDistance);
         EditorGUILayout.PropertyField(MaximumDistance);
-        EditorGUILayout.PropertyField(RolloffMode);
         
         serializedObject.ApplyModifiedProperties();
 

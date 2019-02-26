@@ -47,7 +47,6 @@ public class AudioAsset : ScriptableObject
     public bool Spatialized = true;
     public float MinimumDistance = 1f;
     public float MaximumDistance = 50f;
-    public AudioRolloffMode RolloffMode = AudioRolloffMode.Linear;
 
     public Voice Play(){
         return AudioPlayer.Instance.Play(this);
