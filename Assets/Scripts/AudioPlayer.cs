@@ -79,6 +79,11 @@ public class AudioPlayer : MonoBehaviour
         s.pitch = AudioUtil.SemitoneToPitchFactor(pitchSemitones);
         voice.Volume = AudioUtil.DecibelToVolumeFactor(volumeDecibels);
         s.volume = voice.Volume * voice.Fader.Volume;
+        // set distance attentuation properties
+        s.spatialBlend = sound.Spatialized ? 1f : 0f;
+        s.minDistance = sound.MinimumDistance;
+        s.maxDistance = sound.MaximumDistance;
+        s.rolloffMode = sound.RolloffMode;
         // played the AudioSource
         s.Play();
 

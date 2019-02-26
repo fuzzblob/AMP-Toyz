@@ -24,6 +24,11 @@ public class AudioAssetInspector : Editor
     SerializedProperty FadeTimeIn;
     SerializedProperty FadeTimeOut;
 
+    SerializedProperty Spatialized;
+    SerializedProperty MinimumDistance;
+    SerializedProperty MaximumDistance;
+    SerializedProperty RolloffMode;
+
     void OnEnable(){
         asset = target as AudioAsset;
 
@@ -40,6 +45,11 @@ public class AudioAssetInspector : Editor
         FadeTypeOut = serializedObject.FindProperty("FadeTypeOut");
         FadeTimeIn = serializedObject.FindProperty("FadeTimeIn");
         FadeTimeOut = serializedObject.FindProperty("FadeTimeOut");
+
+        Spatialized = serializedObject.FindProperty("Spatialized");
+        MinimumDistance = serializedObject.FindProperty("MinimumDistance");
+        MaximumDistance = serializedObject.FindProperty("MaximumDistance");
+        RolloffMode = serializedObject.FindProperty("RolloffMode");
     }
 
     public override void OnInspectorGUI(){
@@ -66,6 +76,11 @@ public class AudioAssetInspector : Editor
         EditorGUILayout.PropertyField(FadeTypeIn);        
         EditorGUILayout.PropertyField(FadeTimeOut);
         EditorGUILayout.PropertyField(FadeTypeOut);
+        
+        EditorGUILayout.PropertyField(Spatialized);
+        EditorGUILayout.PropertyField(MinimumDistance);
+        EditorGUILayout.PropertyField(MaximumDistance);
+        EditorGUILayout.PropertyField(RolloffMode);
         
         serializedObject.ApplyModifiedProperties();
 

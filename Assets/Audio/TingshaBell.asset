@@ -30,6 +30,10 @@ MonoBehaviour:
   VolumeBase: 0
   VolumeOffset: 0
   FadeTimeIn: 0.5
-  FadeTypeIn: 4
+  FadeTypeIn: 0
   FadeTimeOut: 0.5
-  FadeTypeOut: 5
+  FadeTypeOut: 0
+  Spatialized: 1
+  MinimumDistance: 1
+  MaximumDistance: 50
+  RolloffMode: 0

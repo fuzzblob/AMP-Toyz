@@ -26,7 +26,7 @@ public struct FadeBehaviour
     private UnityEvent onFadeoutComplete;
 
     public void Reset(){
-        Volume = 1f;
+        Volume = 
         FromValue = 1f;
         ToValue = 1f;
         Duration = 0f;
@@ -75,7 +75,7 @@ public struct FadeBehaviour
                 break;
         }
 
-        Debug.Log($"FadeVolume = {Volume}");
+        //Debug.Log($"FadeVolume = {Volume}");
 
         if(Mathf.Approximately(Volume, ToValue)){
             // target is reached

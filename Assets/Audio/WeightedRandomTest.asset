@@ -33,3 +33,7 @@ MonoBehaviour:
   FadeTypeIn: 0
   FadeTimeOut: 0
   FadeTypeOut: 0
+  Spatialized: 1
+  MinimumDistance: 0
+  MaximumDistance: 50
+  RolloffMode: 1
