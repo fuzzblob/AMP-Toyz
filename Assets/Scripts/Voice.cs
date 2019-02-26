@@ -6,6 +6,7 @@ public class Voice {
     public Vector3 Position;
     public AudioClip Clip;
     public float PlaybackPosition;
+    public bool Looping;
 
     public float Volume;
     public float Pitch;

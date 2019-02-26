@@ -24,6 +24,7 @@ public class AudioAsset : ScriptableObject
     public AudioClip[] Clips;
     
     // Playback
+    public bool Looping = false;
     public PlaylistMode PlayMode;
     [System.NonSerialized]
     public int LastIndex;

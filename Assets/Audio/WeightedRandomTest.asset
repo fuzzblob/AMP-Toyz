@@ -18,6 +18,7 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 09f468d5aa06dab4c8aed87c0104304a, type: 3}
   - {fileID: 8300000, guid: 07d5855096bb8cf47a6b74b9e5f449bb, type: 3}
   - {fileID: 8300000, guid: 07d5855096bb8cf47a6b74b9e5f449bb, type: 3}
+  Looping: 1
   PlayMode: 3
   Weights:
   - 0
@@ -33,7 +34,6 @@ MonoBehaviour:
   FadeTypeIn: 0
   FadeTimeOut: 0
   FadeTypeOut: 0
-  Spatialized: 1
+  Attenuation: 0
   MinimumDistance: 0
   MaximumDistance: 50
-  RolloffMode: 1

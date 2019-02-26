@@ -37,26 +37,33 @@ public class AudioPlayer : MonoBehaviour
         // update state of all Voices
         for(int i = activeAudio.Count - 1; i >= 0; i--){
             Voice voice = activeAudio[i];
-            if(voice == null){
+            if(voice == null) {
                 activeAudio.RemoveAt(i);
                 continue;
             }
-            // clean up list of playing audio
-            if(voice.Source != null)
-            {
+            // update playback position
+            if(voice.Source != null) {
                 if(voice.Source.isPlaying == false) {
-                    pool.Put(voice.Source);
-                    activeAudio.RemoveAt(i);
+                    // source stopped playing
+                    Stop(voice);
                     continue;
                 }
+                // keep current time
                 voice.PlaybackPosition = voice.Source.time;
             }
             else {
-                voice.PlaybackPosition += (Time.deltaTime * voice.Pitch);
+                // advance time
+                voice.PlaybackPosition += (deltaTime * voice.Pitch);
+                if(voice.Looping) {
+                    // ensure safe range
+                    voice.PlaybackPosition %= voice.Clip.length;
+                }
+                else if(voice.PlaybackPosition >= voice.Clip.length){
+                    // virtual voice finished playback
+                    Stop(voice);
+                    continue;
+                }
             }
-            // TODO: stop virtual voice if PlaybackPosition == Clip.length
-            // TODO: only if looping
-            voice.PlaybackPosition = voice.PlaybackPosition % voice.Clip.length;
             // TODO: fade out at end of file?
             /* if(voice.Source.loop == false
                 && voice.Fader.FadeType == FadeType.NONE
@@ -71,28 +78,33 @@ public class AudioPlayer : MonoBehaviour
             if(voice.Fader.FadeType != FadeType.NONE) {
                 voice.Fader.UpdateFade(deltaTime);
             }
+            // distance volume
             float distanceVolume = 1f;
-            if(voice.Attenuation != AttenuationMode.None){
+            if(voice.Attenuation != AttenuationMode.None) {
                 distanceVolume = CalculateDistanceVolume(voice);
             }
             float volume = voice.Volume * voice.Fader.Volume * distanceVolume;
             //value with the fadeFactor here
-            if(volume <= cullingVolume){
+            if(volume <= cullingVolume) {
+                // below culling volume
                 if(voice.Source != null) {
-                    Debug.Log("virtualizing");
-                    voice.Source.Stop();
-                    pool.Put(voice.Source);
-                    voice.Source = null;
+                    // virtualize voice
+                    Stop(voice);
+                    continue;
                 }
             }
-            else if(EnsureSource(voice)){
+            else if(EnsureSource(voice)) {
+                // above culling volume
                 if(voice.Source.isPlaying == false)
                 {
+                    // devirtualize
                     AssignSourceProperties(voice, distanceVolume);
                     voice.Source.Play();
                 }
-                else
+                else {
+                    // update volume
                     voice.Source.volume = volume;
+                }
             }
         }
     }
@@ -116,6 +128,12 @@ public class AudioPlayer : MonoBehaviour
             
     }
 
+    public void Stop(Voice voice) {
+        voice.Source.Stop();
+        pool.Put(voice.Source);
+        voice.Source = null;
+        activeAudio.Remove(voice);            
+    }
     public Voice Play(AudioAsset sound) {
         Voice voice = new Voice() {
             Asset = sound
@@ -133,6 +151,7 @@ public class AudioPlayer : MonoBehaviour
         float volumeDecibels = sound.VolumeBase + Random.Range(-sound.VolumeOffset / 2f, sound.VolumeOffset / 2f);
         voice.Pitch = AudioUtil.SemitoneToPitchFactor(pitchSemitones);
         voice.Volume = AudioUtil.DecibelToVolumeFactor(volumeDecibels);
+        voice.Looping = sound.Looping;
         // set distance attentuation properties
         voice.Attenuation = sound.Attenuation;
         voice.MinDistance = sound.MinimumDistance;
@@ -164,6 +183,7 @@ public class AudioPlayer : MonoBehaviour
     private void AssignSourceProperties(Voice voice, float distanceVolume = 1f){
         voice.Source.clip = voice.Clip;
         voice.Source.time = voice.PlaybackPosition;
+        voice.Source.loop = voice.Looping;
         voice.Source.pitch = voice.Pitch;
         voice.Source.spatialBlend = voice.Attenuation == AttenuationMode.None ? 0f : 1f;
         voice.Source.volume = voice.Volume * voice.Fader.Volume * distanceVolume;

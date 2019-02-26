@@ -11,6 +11,7 @@ public class AudioAssetInspector : Editor
     AudioAsset asset;
 
     SerializedProperty Clips;
+    SerializedProperty Looping;
     SerializedProperty PlayMode;
     SerializedProperty Weights;
 
@@ -32,6 +33,7 @@ public class AudioAssetInspector : Editor
         asset = target as AudioAsset;
 
         Clips = serializedObject.FindProperty("Clips");
+        Looping = serializedObject.FindProperty("Looping");
         PlayMode = serializedObject.FindProperty("PlayMode");
         Weights = serializedObject.FindProperty("Weights");
         
@@ -58,6 +60,8 @@ public class AudioAssetInspector : Editor
         if (EditorGUI.EndChangeCheck()) {
             MatchWeightsWithClips();
         }
+
+        EditorGUILayout.PropertyField(Looping);
 
         EditorGUILayout.PropertyField(PlayMode);
 

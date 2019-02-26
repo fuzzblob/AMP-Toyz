@@ -36,6 +36,7 @@ public class SourcePool
             return data.Pop();
         else if(maxCount == 0 || created < maxCount)
             return Create();
+        // TODO: implement stealing from lower priority
         Debug.LogWarning("coudn't get AudioSource from pool!");
         return null;
     }
