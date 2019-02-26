@@ -11,6 +11,12 @@ public enum PlaylistMode{
     WeightedRandom = 3
 }
 
+public enum AttenuationMode {
+    None = 0,
+    Linear,
+    Logarithmic
+}
+
 [CreateAssetMenu(fileName = "AudioAsset", menuName = "Audio/Create Asset")]
 public class AudioAsset : ScriptableObject
 {
@@ -38,14 +44,18 @@ public class AudioAsset : ScriptableObject
     public float VolumeOffset;
 
     // Fade data
+    [Range(0f, 10f)]
     public float FadeTimeIn;
     public FadeType FadeTypeIn;
+    [Range(0f, 10f)]
     public float FadeTimeOut;
     public FadeType FadeTypeOut;
     
     //Distance & Attenuation
-    public bool Spatialized = true;
+    public AttenuationMode Attenuation = AttenuationMode.None;
+    [Range(0f, 500f)]
     public float MinimumDistance = 1f;
+    [Range(0f, 1000f)]
     public float MaximumDistance = 50f;
 
     public Voice Play(){

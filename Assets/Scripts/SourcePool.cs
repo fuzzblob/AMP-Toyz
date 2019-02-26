@@ -47,18 +47,19 @@ public class SourcePool
     private AudioSource Create(){
         created++;
         GameObject go = GameObject.Instantiate(prefab, AudioPlayer.Instance.transform);
-        go.name = "Source " + created.ToString("00");
+        go.name = "Source " + created.ToString("000");
         return go.GetComponent<AudioSource>();
     }
 
     private void CreatePrefab(){
         prefab = new GameObject();
         prefab.transform.parent = AudioPlayer.Instance.transform;
-        
-        var s = prefab.AddComponent<AudioSource>();
+        AudioSource s = prefab.AddComponent<AudioSource>();
         s.playOnAwake = false;
         s.reverbZoneMix = 0f;
         s.dopplerLevel = 0f;
         s.spatialBlend = 0f;
+        s.SetCustomCurve(AudioSourceCurveType.CustomRolloff, new AnimationCurve(new Keyframe(1, 1)));
+        s.rolloffMode = AudioRolloffMode.Custom;
     }
 }

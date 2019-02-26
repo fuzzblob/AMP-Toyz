@@ -24,7 +24,7 @@ public class AudioAssetInspector : Editor
     SerializedProperty FadeTimeIn;
     SerializedProperty FadeTimeOut;
 
-    SerializedProperty Spatialized;
+    SerializedProperty Attenuation;
     SerializedProperty MinimumDistance;
     SerializedProperty MaximumDistance;
 
@@ -45,7 +45,7 @@ public class AudioAssetInspector : Editor
         FadeTimeIn = serializedObject.FindProperty("FadeTimeIn");
         FadeTimeOut = serializedObject.FindProperty("FadeTimeOut");
 
-        Spatialized = serializedObject.FindProperty("Spatialized");
+        Attenuation = serializedObject.FindProperty("Attenuation");
         MinimumDistance = serializedObject.FindProperty("MinimumDistance");
         MaximumDistance = serializedObject.FindProperty("MaximumDistance");
     }
@@ -75,7 +75,7 @@ public class AudioAssetInspector : Editor
         EditorGUILayout.PropertyField(FadeTimeOut);
         EditorGUILayout.PropertyField(FadeTypeOut);
         
-        EditorGUILayout.PropertyField(Spatialized);
+        EditorGUILayout.PropertyField(Attenuation);
         EditorGUILayout.PropertyField(MinimumDistance);
         EditorGUILayout.PropertyField(MaximumDistance);
         

@@ -5,9 +5,13 @@ using SimpleEasing;
 [ExecuteInEditMode]
 public class AudioPlayer : MonoBehaviour
 {
+    // culling volume -60dB
+    const float cullingVolume = 0.001f;
+
     public static AudioPlayer Instance { get; private set; }
     private SourcePool pool;
     private List<Voice> activeAudio;
+    private AudioListener listener;
 
     void Awake(){
         Instance = this;
@@ -16,6 +20,7 @@ public class AudioPlayer : MonoBehaviour
         // setup runtime data structures
         pool = new SourcePool(0, 16);
         activeAudio = new List<Voice>();
+        listener = (AudioListener)FindObjectOfType(typeof(AudioListener));
     }
 
     private void OnApplicationQuit() {}
@@ -36,16 +41,22 @@ public class AudioPlayer : MonoBehaviour
                 activeAudio.RemoveAt(i);
                 continue;
             }
-            if(voice.Source == null){
-                Debug.LogError("Voice doesn't have an AudioSource!");
-                continue;
-            }
             // clean up list of playing audio
-            if(voice.Source.isPlaying == false) {
-                pool.Put(voice.Source);
-                activeAudio.RemoveAt(i);
-                continue;
+            if(voice.Source != null)
+            {
+                if(voice.Source.isPlaying == false) {
+                    pool.Put(voice.Source);
+                    activeAudio.RemoveAt(i);
+                    continue;
+                }
+                voice.PlaybackPosition = voice.Source.time;
             }
+            else {
+                voice.PlaybackPosition += (Time.deltaTime * voice.Pitch);
+            }
+            // TODO: stop virtual voice if PlaybackPosition == Clip.length
+            // TODO: only if looping
+            voice.PlaybackPosition = voice.PlaybackPosition % voice.Clip.length;
             // TODO: fade out at end of file?
             /* if(voice.Source.loop == false
                 && voice.Fader.FadeType == FadeType.NONE
@@ -60,10 +71,49 @@ public class AudioPlayer : MonoBehaviour
             if(voice.Fader.FadeType != FadeType.NONE) {
                 voice.Fader.UpdateFade(deltaTime);
             }
+            float distanceVolume = 1f;
+            if(voice.Attenuation != AttenuationMode.None){
+                distanceVolume = CalculateDistanceVolume(voice);
+            }
+            float volume = voice.Volume * voice.Fader.Volume * distanceVolume;
             //value with the fadeFactor here
-            if(voice.Source != null)
-                voice.Source.volume = voice.Volume * voice.Fader.Volume;
+            if(volume <= cullingVolume){
+                if(voice.Source != null) {
+                    Debug.Log("virtualizing");
+                    voice.Source.Stop();
+                    pool.Put(voice.Source);
+                    voice.Source = null;
+                }
+            }
+            else if(EnsureSource(voice)){
+                if(voice.Source.isPlaying == false)
+                {
+                    AssignSourceProperties(voice, distanceVolume);
+                    voice.Source.Play();
+                }
+                else
+                    voice.Source.volume = volume;
+            }
         }
+    }
+    private float CalculateDistanceVolume(Voice voice){
+        float distanceVolume = 1f;
+        Vector3 headPos = listener.transform.position;
+        float distance = Vector3.Distance(headPos, voice.Position);
+        float time = Mathf.InverseLerp(voice.MinDistance, voice.MaxDistance, distance);       
+        switch (voice.Attenuation){
+            case AttenuationMode.Linear:
+                distanceVolume = 1f - time;
+                break;
+            case AttenuationMode.Logarithmic:
+                distanceVolume = EasingFunctions.ExponentialOut(1f, 0f, time);
+                break;
+            default: 
+                break;
+
+        }
+        return distanceVolume;
+            
     }
 
     public Voice Play(AudioAsset sound) {
@@ -73,6 +123,7 @@ public class AudioPlayer : MonoBehaviour
         voice.Fader.Reset();
         // get AudioClip
         voice.Clip = GetNextClip(sound);
+        voice.PlaybackPosition = 0f;
         // fading in
         if(sound.FadeTypeIn != FadeType.NONE){
             voice.Fader.Fade(0f, 1f, sound.FadeTimeIn, sound.FadeTypeIn);
@@ -83,29 +134,39 @@ public class AudioPlayer : MonoBehaviour
         voice.Pitch = AudioUtil.SemitoneToPitchFactor(pitchSemitones);
         voice.Volume = AudioUtil.DecibelToVolumeFactor(volumeDecibels);
         // set distance attentuation properties
-        voice.Spatialized = sound.Spatialized;
+        voice.Attenuation = sound.Attenuation;
         voice.MinDistance = sound.MinimumDistance;
         voice.MaxDistance = sound.MaximumDistance;
-
         activeAudio.Add(voice);
+        float distanceVolume = CalculateDistanceVolume(voice);
         // assign AudioSource
+        if((voice.Volume * voice.Fader.Volume * distanceVolume) > cullingVolume
+            && EnsureSource(voice))
+        {
+            AssignSourceProperties(voice, distanceVolume);
+            voice.Source.Play();
+        }
+        else
+            Debug.LogError("can't assign AudioSource for sound asset " + sound);
+        return voice;
+    }
+    private bool EnsureSource(Voice voice){
+        if(voice.Source != null)
+            return true;
+        Debug.Log("getting source");
         AudioSource s = pool.Get();
         if(s == null){
-            // TODO: set voice virtual
-            Debug.LogError("can't assign AudioSource for sound asset " + sound);
-            return voice;
+            return false;
         }
         voice.Source = s;
-        s.clip = voice.Clip;
-        s.volume = voice.Volume * voice.Fader.Volume;
-        s.pitch = voice.Pitch;
-        s.spatialBlend = voice.Spatialized ? 1f : 0f;
-        s.minDistance = voice.MinDistance;
-        s.maxDistance = voice.MaxDistance;
-        s.rolloffMode = AudioRolloffMode.Linear;
-        // played the AudioSource
-        s.Play();
-        return voice;
+        return true;
+    }
+    private void AssignSourceProperties(Voice voice, float distanceVolume = 1f){
+        voice.Source.clip = voice.Clip;
+        voice.Source.time = voice.PlaybackPosition;
+        voice.Source.pitch = voice.Pitch;
+        voice.Source.spatialBlend = voice.Attenuation == AttenuationMode.None ? 0f : 1f;
+        voice.Source.volume = voice.Volume * voice.Fader.Volume * distanceVolume;
     }
 
     public void Stop(Voice voice, float fadeOutTime = -1f){
