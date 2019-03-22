@@ -12,14 +12,17 @@ public class AudioPlayer : MonoBehaviour
     private SourcePool pool;
     private List<Voice> activeAudio;
     private AudioListener listener;
+    private bool activeAudioAdded;
+    private VoiceComparer voiceComp;
 
-    void Awake(){
+    void Awake() {
         Instance = this;
         if(Application.isPlaying)
             DontDestroyOnLoad(this);
         // setup runtime data structures
-        pool = new SourcePool(0, 16);
+        pool = new SourcePool(AudioSettings.GetConfiguration().numRealVoices);
         activeAudio = new List<Voice>();
+        voiceComp = new VoiceComparer();
         listener = (AudioListener)FindObjectOfType(typeof(AudioListener));
     }
 
@@ -34,16 +37,25 @@ public class AudioPlayer : MonoBehaviour
 
     void LateUpdate(){
         float deltaTime = Time.deltaTime; // TODO: maybe use Time.unscaledDeltaTime?
+        if(activeAudioAdded) {
+            activeAudio.Sort(voiceComp);
+            activeAudio.Reverse();
+            activeAudioAdded = false;
+        }
+
         // update state of all Voices
         for(int i = activeAudio.Count - 1; i >= 0; i--){
             Voice voice = activeAudio[i];
-            if(voice == null) {
-                activeAudio.RemoveAt(i);
-                continue;
-            }
+            // TODO: remove when priority system is all checked in
+            //Debug.Log("Updating voice " + i + " at priority " + voice.Priority.ToString());
             // update playback position
             if(voice.Source != null) {
-                if(voice.Source.isPlaying == false) {
+                if(voice.Source.isPlaying == false
+#if UNITY_EDITOR
+                    && UnityEditor.EditorApplication.isPaused == false
+#endif
+                    )
+                {
                     // source stopped playing
                     Stop(voice);
                     continue;
@@ -89,22 +101,22 @@ public class AudioPlayer : MonoBehaviour
                 // below culling volume
                 if(voice.Source != null) {
                     // virtualize voice
-                    Stop(voice);
-                    continue;
+                    voice.Source.Stop();
+                    pool.Put(voice.Source);
+                    voice.Source = null;
+                Debug.LogWarning("virtualizing");
                 }
+                continue;
             }
-            else if(EnsureSource(voice)) {
-                // above culling volume
-                if(voice.Source.isPlaying == false)
-                {
-                    // devirtualize
-                    AssignSourceProperties(voice, distanceVolume);
-                    voice.Source.Play();
-                }
-                else {
-                    // update volume
-                    voice.Source.volume = volume;
-                }
+            // devirtualize
+            else if(voice.Source == null
+                && EnsureSource(voice) == true)
+            {
+                Debug.LogError("de virtualizing");
+                // didn't have a source but claimed one
+                AssignSourceProperties(voice, distanceVolume);
+                voice.Source.Play();
+                continue;
             }
         }
     }
@@ -125,20 +137,21 @@ public class AudioPlayer : MonoBehaviour
 
         }
         return distanceVolume;
-            
     }
 
     public void Stop(Voice voice) {
         voice.Source.Stop();
         pool.Put(voice.Source);
         voice.Source = null;
-        activeAudio.Remove(voice);            
+        activeAudio.Remove(voice);
+        // TODO: pool voice to avoid GC? optimization?            
     }
     public Voice Play(AudioAsset sound) {
         Voice voice = new Voice() {
             Asset = sound
         };
         voice.Fader.Reset();
+        voice.Priority = sound.Priority;
         // get AudioClip
         voice.Clip = GetNextClip(sound);
         voice.PlaybackPosition = 0f;
@@ -157,30 +170,55 @@ public class AudioPlayer : MonoBehaviour
         voice.MinDistance = sound.MinimumDistance;
         voice.MaxDistance = sound.MaximumDistance;
         activeAudio.Add(voice);
+        activeAudioAdded = true;
+        
         float distanceVolume = CalculateDistanceVolume(voice);
         // assign AudioSource
         if((voice.Volume * voice.Fader.Volume * distanceVolume) > cullingVolume
             && EnsureSource(voice))
         {
-            AssignSourceProperties(voice, distanceVolume);
+            AssignSourceProperties(voice);
             voice.Source.Play();
         }
         else
-            Debug.LogError("can't assign AudioSource for sound asset " + sound);
+            Debug.LogError("can't assign AudioSource for sound asset " + sound + " (" + voice.Priority + ")");
         return voice;
     }
-    private bool EnsureSource(Voice voice){
-        if(voice.Source != null)
-            return true;
-        Debug.Log("getting source");
-        AudioSource s = pool.Get();
-        if(s == null){
-            return false;
+
+    public class VoiceComparer : IComparer<Voice>
+    {
+        // Compares by Height, Length, and Width.
+        public int Compare(Voice x, Voice y)
+        {
+            return x.Priority.CompareTo(y.Priority);
         }
-        voice.Source = s;
-        return true;
+    }
+
+    /// <Summary>
+    /// Assigns an AudioSource to the Voice if possible.
+    /// Return true if successful.
+    /// check that no source is attached before calling.
+    /// </Summary>
+    private bool EnsureSource(Voice voice){
+        voice.Source = pool.Get();
+        if(voice.Source != null) {
+            return true;
+        }
+        for(int i = activeAudio.Count - 1; i >= 0; i--){
+            // don't steal from same or higher priority
+            if(activeAudio[i].Priority <= voice.Priority
+                || activeAudio[i].Source == null)
+                continue;
+            // steal source
+            voice.Source = activeAudio[i].Source;
+            activeAudio[i].Source = null;
+            return true;
+        }
+        
+        return false;
     }
     private void AssignSourceProperties(Voice voice, float distanceVolume = 1f){
+        voice.Source.priority = voice.Priority;
         voice.Source.clip = voice.Clip;
         voice.Source.time = voice.PlaybackPosition;
         voice.Source.loop = voice.Looping;
@@ -191,7 +229,7 @@ public class AudioPlayer : MonoBehaviour
 
     public void Stop(Voice voice, float fadeOutTime = -1f){
         if(voice.Asset.FadeTypeOut == FadeType.NONE){
-            StopVoice(voice);
+            Stop(voice);
             return;
         }
         // calculate fade time
@@ -204,15 +242,7 @@ public class AudioPlayer : MonoBehaviour
             voice.Fader.Volume, 0f,
             fadeOutTime, voice.Asset.FadeTypeIn,
             // make the fader stop the voice when done
-            delegate { StopVoice(voice); });
-    }
-
-    private void StopVoice(Voice voice)
-    {
-        voice.Source.Stop();
-        pool.Put(voice.Source);
-        voice.Source = null;
-        activeAudio.Remove(voice);
+            delegate { Stop(voice); });
     }
 
     private AudioClip GetNextClip(AudioAsset sound){

@@ -22,8 +22,9 @@ public class AudioAsset : ScriptableObject
 {
     // Playlist
     public AudioClip[] Clips;
-    
+
     // Playback
+    public byte Priority = 100; // UnityEngine.AudioSource default is 128
     public bool Looping = false;
     public PlaylistMode PlayMode;
     [System.NonSerialized]

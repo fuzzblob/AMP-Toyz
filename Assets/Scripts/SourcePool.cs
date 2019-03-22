@@ -8,11 +8,11 @@ public class SourcePool
     private int created;
     private GameObject prefab;
 
-    public SourcePool(int max = 0, int min = 0){
+    public SourcePool(int max = 0){
         maxCount = max;
         data = new Stack<AudioSource>(maxCount);
         CreatePrefab();
-        for(int i = 0; i < min; i++){
+        for(int i = 0; i < maxCount; i++){
             Put(Create());
         }
     }
@@ -31,12 +31,15 @@ public class SourcePool
 #endif
     }
 
+    public int GetAvaialbleCount(){
+        if(maxCount == 0) return int.MaxValue;
+        return data.Count;
+    }
     public AudioSource Get(){
         if(data.Count > 0)
             return data.Pop();
         else if(maxCount == 0 || created < maxCount)
             return Create();
-        // TODO: implement stealing from lower priority
         Debug.LogWarning("coudn't get AudioSource from pool!");
         return null;
     }

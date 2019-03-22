@@ -10,6 +10,7 @@ public class AudioAssetInspector : Editor
 
     AudioAsset asset;
 
+    SerializedProperty Priority;
     SerializedProperty Clips;
     SerializedProperty Looping;
     SerializedProperty PlayMode;
@@ -32,6 +33,7 @@ public class AudioAssetInspector : Editor
     void OnEnable(){
         asset = target as AudioAsset;
 
+        Priority = serializedObject.FindProperty("Priority");
         Clips = serializedObject.FindProperty("Clips");
         Looping = serializedObject.FindProperty("Looping");
         PlayMode = serializedObject.FindProperty("PlayMode");
@@ -61,6 +63,7 @@ public class AudioAssetInspector : Editor
             MatchWeightsWithClips();
         }
 
+        EditorGUILayout.PropertyField(Priority);
         EditorGUILayout.PropertyField(Looping);
 
         EditorGUILayout.PropertyField(PlayMode);

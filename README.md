@@ -7,11 +7,12 @@
 - Pooled AudioSources
 - Sequence, Random, Shuffle & Weighted playback modes
 - Fading in & out with a selection of fade curves
+- custom distance attenuation system
+- virtual voice simulation
+- priority system (AudioSource limiting & stealing)
 
 ## TODO
 
-- distance attenuation
-- random seek offset
-- virtual voices
-    - priority system to assign AudioSources
+- random seek offset (Nathan homework)
+- update fade behaviour (Maris homework)
 - stem layer system (music/ambiance)

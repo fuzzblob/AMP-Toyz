@@ -5,6 +5,7 @@ public class Voice {
     public AudioAsset Asset;
     public Vector3 Position;
     public AudioClip Clip;
+    public byte Priority;
     public float PlaybackPosition;
     public bool Looping;
 
