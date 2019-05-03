@@ -7,7 +7,11 @@ public class AudioPlayer : MonoBehaviour
 {
     // culling volume -60dB
     const float cullingVolume = 0.001f;
-
+#if UNITY_EDITOR
+    public static bool DebugMode = false;
+#else
+    public static bool DebugMode = false;
+#endif
     public static AudioPlayer Instance { get; private set; }
     private SourcePool pool;
     private List<Voice> activeAudio;
@@ -36,18 +40,16 @@ public class AudioPlayer : MonoBehaviour
     }
 
     void LateUpdate(){
+        UpdateVoices();
+        AssignSources();  
+    }
+    private void UpdateVoices() {
         float deltaTime = Time.deltaTime; // TODO: maybe use Time.unscaledDeltaTime?
-        if(activeAudioAdded) {
-            activeAudio.Sort(voiceComp);
-            activeAudio.Reverse();
-            activeAudioAdded = false;
-        }
-
+        
         // update state of all Voices
         for(int i = activeAudio.Count - 1; i >= 0; i--){
             Voice voice = activeAudio[i];
             // TODO: remove when priority system is all checked in
-            //Debug.Log("Updating voice " + i + " at priority " + voice.Priority.ToString());
             // update playback position
             if(voice.Source != null) {
                 if(voice.Source.isPlaying == false
@@ -95,29 +97,7 @@ public class AudioPlayer : MonoBehaviour
             if(voice.Attenuation != AttenuationMode.None) {
                 distanceVolume = CalculateDistanceVolume(voice);
             }
-            float volume = voice.Volume * voice.Fader.Volume * distanceVolume;
-            //value with the fadeFactor here
-            if(volume <= cullingVolume) {
-                // below culling volume
-                if(voice.Source != null) {
-                    // virtualize voice
-                    voice.Source.Stop();
-                    pool.Put(voice.Source);
-                    voice.Source = null;
-                Debug.LogWarning("virtualizing");
-                }
-                continue;
-            }
-            // devirtualize
-            else if(voice.Source == null
-                && EnsureSource(voice) == true)
-            {
-                Debug.LogError("de virtualizing");
-                // didn't have a source but claimed one
-                AssignSourceProperties(voice, distanceVolume);
-                voice.Source.Play();
-                continue;
-            }
+            voice.OutputVolume = voice.Volume * voice.Fader.Volume * distanceVolume;
         }
     }
     private float CalculateDistanceVolume(Voice voice){
@@ -138,12 +118,86 @@ public class AudioPlayer : MonoBehaviour
         }
         return distanceVolume;
     }
+    
+    private void AssignSources() {
+        // TODO: profile for Garbace GC
+        //activeAudio.Sort(voiceComp);
+        InsertSort(activeAudio);
+
+        int count = activeAudio.Count;
+        int lastSourceSteal = activeAudio.Count - 1;
+        for(int i = 0; i < count; i++) {
+            Voice voice = activeAudio[i];
+             // value with the fadeFactor here
+            if(voice.OutputVolume <= cullingVolume) {
+                // below culling volume
+                if(voice.Source != null) {
+                    // virtualize voice
+                    voice.Source.Stop();
+                    pool.Put(voice.Source);
+                    voice.Source = null;
+                }
+                continue;
+            }
+            else if(voice.Source != null){
+                continue;
+            }
+            
+            bool assignedSource = false;
+            if(pool.GetAvaialbleCount() > 0) {
+                voice.Source = pool.Get();
+                assignedSource = true;
+            }
+            else {
+                // attempt stealing source 
+                for(; lastSourceSteal >= 0 && lastSourceSteal > i; lastSourceSteal--){
+                    if(activeAudio[lastSourceSteal].Source == null)
+                        continue;
+                    // steal source
+                    voice.Source = activeAudio[lastSourceSteal].Source;
+                    activeAudio[lastSourceSteal].Source = null;
+                    assignedSource = true;
+                    break;
+                }
+            }
+            
+            // setup source properties
+            if(assignedSource == false)
+                continue;
+            
+            if(DebugMode)
+                Debug.LogWarning("de virtualizing");
+            // didn't have a source but claimed one
+            AssignSourceProperties(voice);
+            voice.Source.Play();
+        }
+    }
+    private void InsertSort<T>(List<T> list) where T : System.IComparable {
+        // insert sort
+        int n = list.Count, i, ii;
+        T val;
+        for (i = 1; i < n; i++) {
+            val = list[i];
+            int flag = 0;
+            for (ii = i - 1; ii >= 0 && flag != 1;) {
+                if (val.CompareTo(list[ii]) < 0) {
+                    list[ii + 1] = list[ii];
+                    ii--;
+                    list[ii + 1] = val;
+                }
+                else flag = 1;
+            }
+        }
+    }
 
     public void Stop(Voice voice) {
-        voice.Source.Stop();
-        pool.Put(voice.Source);
+        if(voice.Source != null) {
+            voice.Source.Stop();
+            pool.Put(voice.Source);
+        }
         voice.Source = null;
         activeAudio.Remove(voice);
+        voice.FinishedPlaying = true;
         // TODO: pool voice to avoid GC? optimization?            
     }
     public Voice Play(AudioAsset sound) {
@@ -169,19 +223,22 @@ public class AudioPlayer : MonoBehaviour
         voice.Attenuation = sound.Attenuation;
         voice.MinDistance = sound.MinimumDistance;
         voice.MaxDistance = sound.MaximumDistance;
-        activeAudio.Add(voice);
-        activeAudioAdded = true;
         
         float distanceVolume = CalculateDistanceVolume(voice);
+        voice.OutputVolume = (voice.Volume * voice.Fader.Volume * distanceVolume);
         // assign AudioSource
-        if((voice.Volume * voice.Fader.Volume * distanceVolume) > cullingVolume
-            && EnsureSource(voice))
+        if(voice.OutputVolume > cullingVolume
+            && pool.GetAvaialbleCount() > 0)
         {
+            voice.Source = pool.Get();
             AssignSourceProperties(voice);
             voice.Source.Play();
         }
-        else
-            Debug.LogError("can't assign AudioSource for sound asset " + sound + " (" + voice.Priority + ")");
+        else if(DebugMode)
+            Debug.LogWarning("can't assign AudioSource for sound asset " + sound + " (" + voice.Priority + ")");
+        
+        activeAudio.Add(voice);
+        activeAudioAdded = true;
         return voice;
     }
 
@@ -190,41 +247,24 @@ public class AudioPlayer : MonoBehaviour
         // Compares by Height, Length, and Width.
         public int Compare(Voice x, Voice y)
         {
-            return x.Priority.CompareTo(y.Priority);
+            int p = x.Priority.CompareTo(y.Priority);
+            // if priorities are different, return
+            if(p != 0) return p;
+            // if priorities are the same use volume comparison
+            p = x.OutputVolume.CompareTo(y.OutputVolume);
+            // invert volume comparison favoring high values
+            return (p == 1 ? -1 : (p == -1 ? 1 : 0));
         }
     }
 
-    /// <Summary>
-    /// Assigns an AudioSource to the Voice if possible.
-    /// Return true if successful.
-    /// check that no source is attached before calling.
-    /// </Summary>
-    private bool EnsureSource(Voice voice){
-        voice.Source = pool.Get();
-        if(voice.Source != null) {
-            return true;
-        }
-        for(int i = activeAudio.Count - 1; i >= 0; i--){
-            // don't steal from same or higher priority
-            if(activeAudio[i].Priority <= voice.Priority
-                || activeAudio[i].Source == null)
-                continue;
-            // steal source
-            voice.Source = activeAudio[i].Source;
-            activeAudio[i].Source = null;
-            return true;
-        }
-        
-        return false;
-    }
-    private void AssignSourceProperties(Voice voice, float distanceVolume = 1f){
+    private void AssignSourceProperties(Voice voice){
         voice.Source.priority = voice.Priority;
         voice.Source.clip = voice.Clip;
         voice.Source.time = voice.PlaybackPosition;
         voice.Source.loop = voice.Looping;
         voice.Source.pitch = voice.Pitch;
         voice.Source.spatialBlend = voice.Attenuation == AttenuationMode.None ? 0f : 1f;
-        voice.Source.volume = voice.Volume * voice.Fader.Volume * distanceVolume;
+        voice.Source.volume = voice.OutputVolume;
     }
 
     public void Stop(Voice voice, float fadeOutTime = -1f){
