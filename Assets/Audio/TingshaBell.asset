@@ -23,6 +23,7 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 0ed6cfb239e428c4fafbb76199093f43, type: 3}
   - {fileID: 8300000, guid: 0ed6cfb239e428c4fafbb76199093f43, type: 3}
   - {fileID: 8300000, guid: 0ed6cfb239e428c4fafbb76199093f43, type: 3}
+  Looping: 1
   PlayMode: 2
   Weights: []
   PitchBase: 0
@@ -33,7 +34,6 @@ MonoBehaviour:
   FadeTypeIn: 0
   FadeTimeOut: 0.5
   FadeTypeOut: 0
-  Spatialized: 1
+  Attenuation: 2
   MinimumDistance: 1
   MaximumDistance: 50
-  RolloffMode: 0
