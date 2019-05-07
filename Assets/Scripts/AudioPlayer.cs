@@ -19,10 +19,27 @@ public class AudioPlayer : MonoBehaviour
     private bool activeAudioAdded;
     private VoiceComparer voiceComp;
 
+    public static AudioPlayer SafeInstance() {
+        if (Instance != null)
+            return Instance;
+
+        GameObject go = new GameObject("AudioPlayer");
+        go.AddComponent<AudioPlayer>();
+        return Instance;
+    }
+
     void Awake() {
+        if(Instance != null) {
+            if (Instance != this && DebugMode)
+                Debug.LogError("AudioPlayer already has an instance.");
+            this.enabled = false;
+            return;
+        }
+
         Instance = this;
         if(Application.isPlaying)
             DontDestroyOnLoad(this);
+
         // setup runtime data structures
         pool = new SourcePool(AudioSettings.GetConfiguration().numRealVoices);
         activeAudio = new List<Voice>();
@@ -30,8 +47,12 @@ public class AudioPlayer : MonoBehaviour
         listener = (AudioListener)FindObjectOfType(typeof(AudioListener));
     }
 
-    private void OnApplicationQuit() {}
-
+    private void OnDestroy() {
+        Quit();
+    }
+    private void OnApplicationQuit() {
+        Quit();
+    }
     public void Quit(){
         foreach(Voice voice in activeAudio)
             pool.Put(voice.Source);
