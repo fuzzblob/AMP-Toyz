@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UnityEngine;
 using SimpleEasing;
 
@@ -99,19 +99,20 @@ public class AudioPlayer : MonoBehaviour
                     continue;
                 }
             }
-            // TODO: fade out at end of file?
-            /* if(voice.Source.loop == false
-                && voice.Fader.FadeType == FadeType.NONE
-                && voice.Asset.FadeTypeOut != FadeType.NONE
-                && voice.Source.time + voice.Asset.FadeTimeOut >= voice.Source.clip.length)
-            {
-                voice.Fader.Fade(
-                    voice.Fader.FadeVolume, 0f,
-                    voice.Asset.FadeTimeOut, voice.Asset.FadeTypeOut);
-            }*/
+            
             // claculate fade volume factor
             if(voice.Fader.FadeType != FadeType.NONE) {
                 voice.Fader.UpdateFade(deltaTime);
+                // TODO: fade out at end of file?
+                /* if(voice.Source.loop == false
+                    && voice.Fader.FadeType == FadeType.NONE
+                    && voice.Asset.FadeTypeOut != FadeType.NONE
+                    && voice.Source.time + voice.Asset.FadeTimeOut >= voice.Source.clip.length)
+                */
+                // TODO: break out, the voice has stopped playing
+                // Alternatively, simply calculate volume and let the loop end on it's own.
+                //var action = voice.Fader.UpdateFade(deltaTime);
+                //if (action == delegate { Stop(voice); })
             }
             // distance volume
             float distanceVolume = 1f;
@@ -232,7 +233,7 @@ public class AudioPlayer : MonoBehaviour
         voice.PlaybackPosition = 0f;
         // fading in
         if(sound.FadeTypeIn != FadeType.NONE){
-            voice.Fader.Fade(0f, 1f, sound.FadeTimeIn, sound.FadeTypeIn);
+            voice.Fader.StartFade(0f, 1f, sound.FadeTimeIn, sound.FadeTypeIn);
         }
         // apply pitch and volume randomization
         float pitchSemitones = sound.PitchBase + Random.Range(-sound.PitchOffset / 2f, sound.PitchOffset / 2f);
@@ -299,11 +300,11 @@ public class AudioPlayer : MonoBehaviour
         else
             fadeOutTime = voice.Asset.FadeTimeOut;
         // start fading
-        voice.Fader.Fade(
+        voice.Fader.StartFade(
             voice.Fader.Volume, 0f,
-            fadeOutTime, voice.Asset.FadeTypeIn,
-            // make the fader stop the voice when done
-            delegate { Stop(voice); });
+            fadeOutTime, voice.Asset.FadeTypeIn);
+        // make the fader stop the voice when done
+        voice.Fader.SetCallback(delegate { Stop(voice); });
     }
 
     private AudioClip GetNextClip(AudioAsset sound){
