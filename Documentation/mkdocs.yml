@@ -1,0 +1,4 @@
+site_name: AMP-Toyz
+#theme: readthedocs
+nav:
+- Home: index.md

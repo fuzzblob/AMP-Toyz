@@ -15,4 +15,4 @@
 
 - random seek offset (Nathan homework)
 - stem layer system (music/ambiance)
-- documentation
+- documentation (MkDocs [work in progress](https://fuzzblob.github.io/AMP-Toyz/))
