@@ -1,3 +1,6 @@
-the documentation is written in MarkDown using [MkDocs](https://www.mkdocs.org/) to build html and push it to the gh-pages branch
-
-the live site can be seen here: <https://fuzzblob.github.io/AMP-Toyz/>
+- the documentation is written in MarkDown using [MkDocs](https://www.mkdocs.org/) to build html and push it to the **gh-pages** branch
+- to edit the documentation, simply navigate to the markdown files in the `docs/` folder and start editing.
+- to build the site navigate to the `Documentation/` folder and run the command `mkdocs build`
+  - this will generate or update the `Documentation/site/` folder which contains the html/js website data.
+  - The command `mkdocs serve` will start a localhost server which will serve the website at <http://127.0.0.1:8000> and update the site's content everytime a markdown file is saved.
+- The command `mkdocs gh-deploy` deplys the current version to the documentation branch on github which will serve the site to github pages at <https://fuzzblob.github.io/AMP-Toyz/>
